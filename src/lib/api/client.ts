@@ -3,7 +3,7 @@ import { getAuthToken } from "@/lib/auth/storage";
 import type { ApiErrorBody } from "./types";
 
 const baseURL =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:4000";
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:5000";
 
 export const api = axios.create({
   baseURL: `${baseURL}/api`,

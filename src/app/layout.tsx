@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
-import { Navbar } from "@/components/Navbar";
-import "./globals.css";
 import { Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { AuthProvider } from "@/contexts/auth-context";
+import { ToastProvider } from "@/contexts/toast-context";
+import { CartProvider } from "@/contexts/cart-context";
+import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
+import Toaster from "@/components/Toaster";
+import "./globals.css";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Catálogo SaaS",
-  description: "Catálogo de produtos com pedidos via WhatsApp",
+  title: "DevFlow - Crie sua loja online",
+  description: "Plataforma para criar e gerenciar sua loja com pedidos via WhatsApp",
 };
 
 export default function RootLayout({
@@ -19,8 +23,16 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={cn("font-sans", inter.variable)}>
       <body className="antialiased">
-        <Navbar />
-        <main>{children}</main>
+        <ReactQueryProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <CartProvider>
+                {children}
+                <Toaster />
+              </CartProvider>
+            </AuthProvider>
+          </ToastProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );

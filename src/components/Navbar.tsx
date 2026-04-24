@@ -1,63 +1,79 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { clearAuthToken, getAuthToken } from "@/lib/auth/storage";
+import React, { useState } from 'react';
+import { 
+  LayoutGrid, Box, ShoppingBag, Users, BarChart2, Settings, Plus, LifeBuoy, LogOut 
+} from 'lucide-react';
+import { Button } from './ui/Button';
+import { useRouter } from 'next/navigation';
 
-export function Navbar() {
-  const pathname = usePathname();
+export default function Navbar() {
+  const [activeItem, setActiveItem] = useState('Overview');
   const router = useRouter();
-  const [hasToken, setHasToken] = useState(false);
+  
 
-  useEffect(() => {
-    setHasToken(Boolean(getAuthToken()));
-  }, [pathname]);
-
-  function handleLogout() {
-    clearAuthToken();
-    setHasToken(false);
-    router.push("/login");
-    router.refresh();
-  }
-
-  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const navItems = [
+    { name: 'Geral', icon: LayoutGrid, link: '/dashboard' },
+    { name: 'Produtos', icon: Box, link: '/dashboard/products' },
+    { name: 'Catálogo', icon: Box, link: '/dashboard/catalog' },
+    { name: 'Pedidos', icon: ShoppingBag, link: '/dashboard/orders' },
+    { name: 'Clientes', icon: Users, link: '/dashboard/customers' },
+    { name: 'Análises', icon: BarChart2, link: '/dashboard/analytics' },
+    { name: 'Configurações', icon: Settings, link: '/dashboard/settings' },
+  ];
 
   return (
-    <header className="border-b border-[var(--border)] bg-[var(--card)]/80 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-        <Link href="/" className="text-sm font-semibold tracking-tight text-white">
-          Catálogo SaaS
-        </Link>
-        <nav className="flex items-center gap-4 text-sm text-[var(--muted)]">
-          {!isAuthPage && hasToken && (
-            <Link href="/dashboard" className="hover:text-white">
-              Dashboard
-            </Link>
-          )}
-          {!hasToken ? (
-            <>
-              <Link href="/login" className="hover:text-white">
-                Entrar
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-md bg-[var(--accent)] px-3 py-1.5 font-medium text-white hover:bg-[var(--accent-hover)]"
-              >
-                Criar conta
-              </Link>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-md border border-[var(--border)] px-3 py-1.5 text-white hover:bg-white/5"
+    <aside className="flex flex-col justify-between w-[260px] h-screen p-6 bg-slate-50 border-r border-slate-200">
+      
+      <div className="flex flex-col gap-2">
+        {navItems.map((item) => {
+          const isActive = activeItem === item.name;
+          return (
+            <Button
+              key={item.name}
+              variant={isActive ? "outline" : "ghost"}
+              className={`justify-start gap-3 w-full text-[14px] ${
+                isActive 
+                  ? "bg-white text-emerald-800 border-slate-200 shadow-sm hover:bg-slate-50 hover:text-emerald-900" 
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+              onClick={() => {
+                setActiveItem(item.name);
+                router.push(item.link);
+              }}
             >
-              Sair
-            </button>
-          )}
-        </nav>
+              <item.icon className="w-5 h-5" />
+              {item.name}
+            </Button>
+          );
+        })}
       </div>
-    </header>
+
+      {/* Seção Inferior - Botões de Ação */}
+      <div className="flex flex-col gap-8">
+        {/* Botão Principal */}
+        <Button className="w-full gap-2 bg-[#006d3a] hover:bg-[#00592f] text-white">
+          <Plus strokeWidth={3} className="w-4 h-4" />
+          Create Product
+        </Button>
+
+        {/* Links do Rodapé */}
+        <div className="flex flex-col gap-1">
+          <Button variant="ghost" className="justify-start gap-3 w-full text-slate-500 hover:text-slate-900 font-normal">
+            <LifeBuoy className="w-4 h-4" />
+            Support
+          </Button>
+          <Button
+            variant="ghost"
+            className="justify-start gap-3 w-full text-slate-500 hover:text-slate-900 font-normal"
+            onClick={() => router.push('/logout')}
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
+        </div>
+      </div>
+
+    </aside>
   );
 }

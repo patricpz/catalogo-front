@@ -14,7 +14,7 @@ module.exports = {
           700: '#128C7E',
         },
         ui: {
-          'bg': '#FFFFFF',
+          'bg': '#D3D3D3',
           'muted': '#F5F7FA',
           'mid': '#E1E6EB',
           'dark': '#333842'
