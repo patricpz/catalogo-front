@@ -13,6 +13,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadProductImage,
   type Product as ProductType,
 } from "@/lib/api/products";
 import { getApiErrorMessage } from "@/lib/api/client";
@@ -23,6 +24,8 @@ type ProductForm = {
   description: string;
   price: string;
   image?: string;
+  imageFile?: File;
+  imagePreview?: string;
 };
 
 export default function ProductsPage() {
@@ -52,7 +55,7 @@ export default function ProductsPage() {
 
   function openCreate() {
     setEditing(null);
-    setForm({ id: "", name: "", description: "", price: "" });
+    setForm({ id: "", name: "", description: "", price: "", image: undefined, imageFile: undefined, imagePreview: undefined });
     setModalOpen(true);
   }
 
@@ -64,23 +67,28 @@ export default function ProductsPage() {
       description: p.description || "",
       price: String(p.price),
       image: p.image || undefined,
+      imageFile: undefined,
+      imagePreview: undefined,
     });
     setModalOpen(true);
   }
 
   async function handleSave() {
     if (!form.name.trim() || !form.price.trim()) {
-      error("Campos obrigatorios", "Preencha nome e preco.");
+      error("Campos obrigatórios", "Preencha nome e preço.");
       return;
     }
+  
     try {
       const price = typeof form.price === "string"
         ? parseFloat(form.price.replace(",", "."))
         : Number(form.price);
+  
       if (!Number.isFinite(price) || price <= 0) {
-        error("Preco invalido", "Informe um preco numerico valido.");
+        error("Preço inválido", "Informe um preço numérico válido.");
         return;
       }
+  
       const input = {
         name: form.name.trim(),
         description: form.description.trim(),
@@ -88,16 +96,28 @@ export default function ProductsPage() {
         image: form.image || undefined,
         available: true,
       };
+
+      let savedProduct: ProductType;
+  
       if (editing) {
-        await updateProductMutation.mutateAsync({ id: editing.id, input });
+        savedProduct = await updateProductMutation.mutateAsync({ id: editing.id, input });
         success("Produto atualizado", `"${form.name}" foi atualizado com sucesso.`);
       } else {
-        await createProductMutation.mutateAsync(input);
-        success("Produto criado", `"${form.name}" foi adicionado ao catalogo.`);
+        savedProduct = await createProductMutation.mutateAsync(input);
+        success("Produto criado", `"${form.name}" foi adicionado ao catálogo.`);
       }
+
+      if (form.imageFile) {
+        await uploadProductImage(savedProduct.id, form.imageFile);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
+      
       setModalOpen(false);
     } catch (e) {
-      error("Erro ao salvar", getApiErrorMessage(e));
+      // Usando sua função helper para pegar a mensagem de erro
+      const message = e instanceof Error ? e.message : "Erro inesperado ao salvar produto.";
+      error("Erro ao salvar", getApiErrorMessage(e) || message);
     }
   }
 
@@ -176,38 +196,63 @@ export default function ProductsPage() {
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             placeholder="Ex: Camiseta Verde"
           />
+
           <div>
-            <label className="text-sm text-[var(--muted)] block mb-1">Descricao</label>
+            <label className="text-sm text-[var(--muted)] block mb-1">Descrição</label>
             <textarea
               className="w-full rounded-lg border border-[var(--border)] p-2.5 text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/20"
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Descricao detalhada do produto..."
+              placeholder="Descrição detalhada do produto..."
             />
           </div>
+
           <Input
-            label="Preco (R$)"
+            label="Preço (R$)"
             value={form.price}
             onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
             placeholder="49.90"
             type="number"
           />
-          <Input
-            label="URL da imagem (opcional)"
-            value={form.image || ""}
-            onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-            placeholder="https://exemplo.com/imagem.jpg"
-          />
-          {form.image && (
+
+          {/* --- NOVA ÁREA DE UPLOAD DE IMAGEM --- */}
+          <div>
+            <label className="text-sm text-[var(--muted)] block mb-1">Imagem do produto</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  // Salvamos o arquivo para enviar ao servidor e criamos uma URL temporária para o preview
+                  setForm((f) => ({
+                    ...f,
+                    imageFile: file,
+                    imagePreview: URL.createObjectURL(file)
+                  }));
+                }
+              }}
+              className="w-full text-sm text-[var(--muted)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[var(--accent)] file:text-white hover:file:bg-[var(--accent-hover)] file:cursor-pointer cursor-pointer"
+            />
+          </div>
+
+          {/* Mostra o preview local (novo upload) ou a imagem existente (modo edição) */}
+          {(form.imagePreview || form.image) && (
             <div className="mt-2">
-              <img src={form.image} alt="preview" className="h-24 object-cover rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              <img
+                src={form.imagePreview || form.image}
+                alt="Preview da imagem"
+                className="h-24 w-24 object-cover rounded-lg border border-[var(--border)]"
+              />
             </div>
           )}
+          {/* -------------------------------------- */}
+
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="ghost" onClick={() => setModalOpen(false)} disabled={submitting}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={submitting} className="bg-[var(--accent)] hover:bg-[var(--accent-hover)]">
+            <Button onClick={handleSave} disabled={submitting} className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white">
               {submitting ? "Salvando..." : editing ? "Atualizar" : "Criar produto"}
             </Button>
           </div>

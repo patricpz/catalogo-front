@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import Skeleton from "@/components/Skeleton";
 import { Package, ShoppingCart, TrendingUp, Copy, ExternalLink } from "lucide-react";
+import { useStore } from "@/hooks/useStore";
 
 const statCards = [
   { label: "Produtos ativos", value: 0, icon: Package, color: "text-green-600 bg-green-50", change: "+2 esta semana" },
@@ -14,7 +15,12 @@ const statCards = [
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const { info } = useToast();
-  const storeUrl = typeof window !== "undefined" ? `${window.location.origin}/catalog/minha-loja` : "";
+  const storeQuery = useStore()
+  const store = storeQuery.data ?? user?.store ?? null;
+  const storeUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/catalog/${store?.slug || "minha-loja"}`
+    : "";
+    console.log("User store:", store);
 
   function handleCopyLink() {
     navigator.clipboard.writeText(storeUrl).then(() => {
@@ -58,7 +64,7 @@ export default function DashboardPage() {
             Copiar link da loja
           </button>
           <a
-            href="/catalog/minha-loja"
+            href={storeUrl}
             target="_blank"
             className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] text-white px-4 py-2 text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
           >

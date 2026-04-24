@@ -1,7 +1,12 @@
+import { Store } from "./stores";
+
 export type User = {
   id: string;
   email: string;
   createdAt: string;
+  updatedAt: string;
+  password: string;
+  store?: Store;
 };
 
 export type AuthResponse = {

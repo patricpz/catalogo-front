@@ -1,21 +1,26 @@
 "use client";
 
-"use client";
-
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import { useCart } from "@/contexts/cart-context";
 import { clearAuthToken } from "@/lib/auth/storage";
+
 import { User, Trash2, LogOut, Copy, Shield } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useRouter } from "next/navigation";
+import { useStore } from "@/hooks/useStore";
 
 export default function SettingsPage() {
   const { user, setUser } = useAuth();
   const { clearCart } = useCart();
   const { success, info } = useToast();
   const router = useRouter();
-  const storeUrl = typeof window !== "undefined" ? `${window.location.origin}/catalog/minha-loja` : "";
+  const storeQuery = useStore();
+
+  const store = storeQuery.data ?? user?.store ?? null;
+  const storeUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/catalog/${store?.slug || "minha-loja"}`
+    : "";
 
   return (
     <div className="p-4 sm:p-8 lg:pl-10">
@@ -82,9 +87,28 @@ export default function SettingsPage() {
             <div>
               <label className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Slug</label>
               <div className="mt-1 h-10 rounded-lg border border-[var(--border)] px-3 flex items-center text-sm">
-                minha-loja
+                {store?.slug || "minha-loja"}
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Dados brutos */}
+        <div className="rounded-xl border border-[var(--border)] bg-white shadow-sm p-6 space-y-4">
+          <h3 className="font-semibold">Dados completos</h3>
+
+          <div>
+            <label className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">User (JSON)</label>
+            <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-[var(--border)] bg-[var(--secondary)] p-3 text-xs leading-relaxed">
+              {JSON.stringify(user, null, 2)}
+            </pre>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">Store (JSON)</label>
+            <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-[var(--border)] bg-[var(--secondary)] p-3 text-xs leading-relaxed">
+              {storeQuery.isLoading ? "Carregando store..." : JSON.stringify(store, null, 2)}
+            </pre>
           </div>
         </div>
 

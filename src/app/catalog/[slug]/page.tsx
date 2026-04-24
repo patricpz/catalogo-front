@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShoppingCart, ChevronUp, ChevronDown, X, Store, MessageCircle, Minus, Plus, Copy, Check, Phone } from "lucide-react";
+import { ShoppingCart, ChevronUp, ChevronDown, X, Store, MessageCircle, Minus, Plus, Copy, Check, Phone, Clock, Star, ChevronRight } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCart } from "@/contexts/cart-context";
 import { useToast } from "@/contexts/toast-context";
@@ -30,6 +30,7 @@ export default function CatalogSlugPage({ params }: { params: Promise<{ slug: st
   const { success, error } = useToast();
   const [cartOpen, setCartOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [logoLoadError, setLogoLoadError] = useState(false);
   const createOrderMutation = useMutation({
     mutationFn: createOrder,
   });
@@ -47,6 +48,12 @@ export default function CatalogSlugPage({ params }: { params: Promise<{ slug: st
 
   const store = data?.store ?? null;
   const products = data?.products ?? [];
+  const storeInitial = store?.name?.trim()?.charAt(0).toUpperCase() || "E";
+  const storeLogo = ((store as { logo?: string | null } | null)?.logo ?? "").trim();
+
+  useEffect(() => {
+    setLogoLoadError(false);
+  }, [storeLogo]);
 
   function handleAdd(p: CatalogProduct) {
     addItem({ id: p.id, name: p.name, price: p.price, image: p.image ?? undefined });
@@ -94,135 +101,227 @@ export default function CatalogSlugPage({ params }: { params: Promise<{ slug: st
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[var(--accent)] to-emerald-600 flex items-center justify-center text-white font-bold text-lg">
-                  {store?.name?.charAt(0).toUpperCase() || "L"}
-                </div>
-                <div>
-                  <h1 className="text-base font-bold leading-tight">{store?.name || "Loja"}</h1>
-                  {store?.whatsappNumber && (
-                    <p className="text-[10px] text-[var(--muted)] flex items-center gap-0.5">
-                      <Phone className="h-2.5 w-2.5" />
-                      {store.whatsappNumber}
-                    </p>
-                  )}
-                </div>
-              </div>
+
             </>
           )}
-          <div className="flex items-center gap-2">
-            <button onClick={handleCopyShare} className="p-2 rounded-lg hover:bg-[var(--secondary)] transition-colors" aria-label="Compartilhar">
-              {isCopied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-            </button>
-          </div>
         </div>
       </header>
 
-      {/* Products */}
-      <main className="container mx-auto px-4 py-8 pb-32">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">Nossos Produtos</h2>
-          <p className="text-sm text-[var(--muted)] mt-1">Escolha seus produtos e envie o pedido pelo WhatsApp</p>
+<div className="min-h-screen bg-white">
+
+      <header className="px-4 pb-4 relative flex flex-col items-center">
+        {/* Logo Circular - Margem negativa para subir na capa */}
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-white bg-white flex items-center justify-center shadow-sm overflow-hidden -mt-10 sm:-mt-12 relative z-10">
+          {storeLogo && !logoLoadError ? (
+            <img
+              src={storeLogo}
+              alt={store?.name || "Logo da loja"}
+              className="w-full h-full object-cover"
+              onError={() => setLogoLoadError(true)}
+            />
+          ) : (
+            <span className="text-[var(--accent)] font-bold text-3xl">
+              {storeInitial}
+            </span>
+          )}
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Skeleton key={i} className="h-72" />
-            ))}
+        {/* Nome da Loja */}
+        <h1 className="text-xl sm:text-2xl font-bold leading-tight mt-2 text-[var(--foreground)] text-center">
+          {store?.name || "esfiha da vovó"}
+        </h1>
+
+        {/* Status (Aberto/Fechado) */}
+        <span className="mt-1.5 px-3 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+          Aberto
+        </span>
+
+      </header>
+
+      <nav className="sticky top-0 bg-white z-30 border-b border-[var(--border)] mt-2">
+        <ul className="flex overflow-x-auto whitespace-nowrap px-4 hide-scrollbar">
+          {["combo mais vendido", "PROMOÇÃO", "Esfihas Abertas", "PIZZA G", "BROTINHO", "Bebidas"].map((cat, idx) => (
+            <li key={cat} className="mr-6 last:mr-0 shrink-0">
+              <button 
+                className={`py-3 text-sm font-medium uppercase tracking-wide border-b-2 transition-colors ${
+                  idx === 0 
+                    ? "border-[var(--accent)] text-[var(--foreground)]" 
+                    : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]"
+                }`}
+              >
+                {cat}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <main className="container mx-auto py-6 pb-36 space-y-8">
+        
+        {/* Categoria: Destaque / Mais Vendidos */}
+        <section>
+          <div className="flex items-center justify-between px-4 mb-4">
+            <h2 className="text-lg font-bold text-[var(--foreground)] flex items-center gap-2">
+              <Star className="h-5 w-5 text-blue-500 fill-blue-500" />
+              combo mais vendido
+            </h2>
+            <button className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] flex items-center">
+              Ver todos <ChevronRight className="h-4 w-4 ml-0.5" />
+            </button>
           </div>
-        ) : products.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-[var(--muted)]">
-            <Store className="h-16 w-16 mb-4 opacity-20" />
-            <p className="text-xl font-semibold">Loja sem produtos</p>
-            <p className="text-sm mt-2">Os produtos aparecerão aqui quando forem cadastrados.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.filter((p) => p.available !== false).map((p) => (
-              <div key={p.id} className="rounded-xl border border-[var(--border)] bg-white overflow-hidden shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 flex flex-col">
-                <div className="h-44 w-full bg-[var(--secondary)] overflow-hidden">
-                  {p.image ? (
-                    <img src={p.image} alt={p.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <Store className="h-10 w-10 text-[var(--muted)] opacity-30" />
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="text-sm font-semibold leading-snug">{p.name}</h3>
-                  {p.description && (
-                    <p className="text-xs text-[var(--muted)] mt-1 line-clamp-2">{p.description}</p>
-                  )}
-                  <div className="mt-auto pt-3 flex items-center justify-between gap-2">
-                    <span className="text-lg font-bold text-[var(--accent)]">
-                      {formatPrice(p.price)}
-                    </span>
-                    <Button onClick={() => handleAdd(p)} size="sm" className="gap-1 bg-[var(--accent)] hover:bg-[var(--accent-hover)]">
-                      <Plus className="h-3.5 w-3.5" />
-                      Adicionar
-                    </Button>
+
+          {loading ? (
+            <div className="flex overflow-x-auto gap-4 px-4 pb-4 hide-scrollbar">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="w-[140px] h-[200px] shrink-0 rounded-xl" />
+              ))}
+            </div>
+          ) : products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-[var(--muted)]">
+              <Store className="h-10 w-10 mb-2 opacity-20" />
+              <p className="text-sm">Nenhum produto encontrado.</p>
+            </div>
+          ) : (
+            <div className="flex overflow-x-auto gap-4 px-4 pb-4 hide-scrollbar">
+              {products.filter((p) => p.available !== false).map((p) => (
+                <div 
+                  key={p.id} 
+                  className="w-[140px] sm:w-[160px] shrink-0 flex flex-col group cursor-pointer active:scale-95 transition-transform"
+                  onClick={() => handleAdd(p)}
+                >
+                  {/* Imagem do Produto */}
+                  <div className="w-full aspect-square rounded-xl bg-gray-100 overflow-hidden mb-2 border border-black/5 relative">
+                    {p.image ? (
+                      <img 
+                        src={p.image} 
+                        alt={p.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Store className="h-8 w-8 text-gray-300" />
+                      </div>
+                    )}
+                    {/* Botão rápido sobre a imagem (opcional, estilo iFood) */}
+                    <button 
+                      className="absolute bottom-2 right-2 h-8 w-8 bg-white rounded-full shadow flex items-center justify-center text-[var(--accent)] hover:bg-gray-50"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evita clicar no card duas vezes
+                        handleAdd(p);
+                      }}
+                    >
+                      <Plus className="h-5 w-5" />
+                    </button>
                   </div>
+
+                  {/* Detalhes do Produto */}
+                  <h3 className="text-sm font-semibold leading-tight line-clamp-2 text-[var(--foreground)] mb-1">
+                    {p.name}
+                  </h3>
+                  {p.description && (
+                    <p className="text-[10px] text-[var(--muted)] line-clamp-1 mb-1">
+                      {p.description}
+                    </p>
+                  )}
+                  <span className="text-sm font-bold mt-auto text-[var(--foreground)]">
+                    {formatPrice(p.price)}
+                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </section>
+        
+
       </main>
 
-      {/* Cart Drawer */}
+      {/* ================= GAVETA DO CARRINHO ================= */}
       {totalItems > 0 && (
         <aside
-          className={`fixed bottom-0 left-0 z-50 w-full bg-white border-t border-[var(--border)] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] transition-all duration-300 ease-in-out sm:bottom-6 sm:left-auto sm:right-6 sm:w-96 sm:rounded-2xl sm:border sm:shadow-xl ${
+          className={`fixed bottom-0 left-0 z-50 w-full bg-white border-t border-[var(--border)] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out sm:bottom-6 sm:left-auto sm:right-6 sm:w-96 sm:rounded-2xl sm:border sm:shadow-xl ${
             cartOpen ? "translate-y-0" : "translate-y-[calc(100%-72px)]"
           }`}
         >
-          <div className="flex items-center justify-between p-4 cursor-pointer sm:cursor-default" onClick={() => setCartOpen(!cartOpen)}>
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5 text-[var(--foreground)]" />
-              <h3 className="text-lg font-semibold">
-                Carrinho <span className="text-sm font-normal text-[var(--muted)]">({totalItems} {totalItems === 1 ? "item" : "itens"})</span>
+          {/* Header do Carrinho (Clique para abrir/fechar) */}
+          <div 
+            className="flex items-center justify-between p-4 cursor-pointer select-none active:bg-gray-50 transition-colors" 
+            onClick={() => setCartOpen(!cartOpen)}
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <ShoppingCart className="h-5 w-5 text-[var(--foreground)]" />
+                <span className="absolute -top-2 -right-2 bg-[var(--accent)] text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              </div>
+              <h3 className="text-base font-semibold">
+                Seu Carrinho
               </h3>
             </div>
-            <div className="sm:hidden">
-              {cartOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
+            <div className="flex items-center gap-3">
+              <span className="text-base font-bold text-[var(--foreground)] sm:hidden">
+                {formatPrice(totalPrice)}
+              </span>
+              <div className="bg-[var(--secondary)] rounded-full p-1">
+                {cartOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              </div>
             </div>
           </div>
-          <div className="px-4 pb-4">
-            <div className="space-y-3 max-h-[35vh] sm:max-h-60 overflow-y-auto mb-4">
+
+          {/* Lista de Itens do Carrinho (Exibida apenas quando aberto) */}
+          <div className="px-4 pb-4 pb-safe">
+            <div className="space-y-3 max-h-[40vh] sm:max-h-60 overflow-y-auto mb-4 hide-scrollbar">
               {items.map((it) => (
-                <div key={it.id} className="flex items-center gap-3 bg-[var(--secondary)] p-3 rounded-lg">
+                <div key={it.id} className="flex items-center gap-3 bg-[var(--secondary)] p-3 rounded-xl">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{it.name}</p>
-                    <p className="text-xs text-[var(--muted)]">Qtd: {it.quantity}</p>
+                    <p className="text-sm font-medium truncate text-[var(--foreground)]">{it.name}</p>
+                    <p className="text-xs text-[var(--muted)] mt-0.5">{formatPrice(it.price * it.quantity)}</p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={(e) => { e.stopPropagation(); updateQuantity(it.id, it.quantity - 1); }} className="h-7 w-7 rounded-md bg-white border flex items-center justify-center hover:bg-gray-50">
+                  <div className="flex items-center gap-2 shrink-0 bg-white rounded-lg border p-1 shadow-sm">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); updateQuantity(it.id, it.quantity - 1); }} 
+                      className="h-6 w-6 rounded-md flex items-center justify-center text-[var(--foreground)] active:bg-gray-100"
+                    >
                       <Minus className="h-3 w-3" />
                     </button>
-                    <span className="w-7 text-center text-sm font-medium">{it.quantity}</span>
-                    <button onClick={(e) => { e.stopPropagation(); updateQuantity(it.id, it.quantity + 1); }} className="h-7 w-7 rounded-md bg-white border flex items-center justify-center hover:bg-gray-50">
+                    <span className="w-4 text-center text-xs font-semibold">{it.quantity}</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); updateQuantity(it.id, it.quantity + 1); }} 
+                      className="h-6 w-6 rounded-md flex items-center justify-center text-[var(--foreground)] active:bg-gray-100"
+                    >
                       <Plus className="h-3 w-3" />
                     </button>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); removeItem(it.id); }} className="text-[var(--muted)] hover:text-red-500 shrink-0" aria-label="Remover">
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); removeItem(it.id); }} 
+                    className="text-[var(--muted)] hover:text-red-500 p-2 shrink-0" 
+                  >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-[var(--muted)]">Total</span>
-              <span className="text-lg font-bold">{formatPrice(totalPrice)}</span>
+            
+            <div className="border-t border-[var(--border)] pt-4 pb-2">
+              <div className="flex items-center justify-between mb-4 hidden sm:flex">
+                <span className="text-sm text-[var(--muted)]">Total</span>
+                <span className="text-xl font-bold">{formatPrice(totalPrice)}</span>
+              </div>
+              <Button 
+                onClick={(e) => { e.stopPropagation(); void handleCheckoutWhatsApp(); }} 
+                disabled={createOrderMutation?.isPending} 
+                className="w-full h-12 text-base font-medium shadow-md gap-2 bg-[#25D366] hover:bg-[#1DA851] text-white rounded-xl"
+              >
+                <MessageCircle className="h-5 w-5" />
+                {createOrderMutation?.isPending ? "Processando..." : "Pedir pelo WhatsApp"}
+              </Button>
             </div>
-            <Button onClick={(e) => { e.stopPropagation(); void handleCheckoutWhatsApp(); }} disabled={createOrderMutation.isPending} className="w-full gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] py-3 text-sm">
-              <MessageCircle className="h-4 w-4" />
-              {createOrderMutation.isPending ? "Enviando..." : "Finalizar no WhatsApp"}
-            </Button>
           </div>
         </aside>
       )}
+    </div>
+
+
     </div>
   );
 }
