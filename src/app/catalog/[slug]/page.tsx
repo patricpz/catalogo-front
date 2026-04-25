@@ -158,7 +158,6 @@ export default function CatalogSlugPage({ params }: { params: Promise<{ slug: st
 
       <main className="container mx-auto py-6 pb-36 space-y-8">
         
-        {/* Categoria: Destaque / Mais Vendidos */}
         <section>
           <div className="flex items-center justify-between px-4 mb-4">
             <h2 className="text-lg font-bold text-[var(--foreground)] flex items-center gap-2">
@@ -235,7 +234,6 @@ export default function CatalogSlugPage({ params }: { params: Promise<{ slug: st
 
       </main>
 
-      {/* ================= GAVETA DO CARRINHO ================= */}
       {totalItems > 0 && (
         <aside
           className={`fixed bottom-0 left-0 z-50 w-full bg-white border-t border-[var(--border)] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out sm:bottom-6 sm:left-auto sm:right-6 sm:w-96 sm:rounded-2xl sm:border sm:shadow-xl ${
