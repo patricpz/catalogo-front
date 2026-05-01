@@ -12,6 +12,11 @@ export async function login(email: string, password: string): Promise<AuthRespon
 }
 
 export async function fetchMe(): Promise<{ user: User }> {
-  const { data } = await api.get<{ user: User }>("/auth/me");
-  return data;
+  try {
+    const { data } = await api.get<{ user: User }>("/user/profile");
+    return data;
+  } catch {
+    const { data } = await api.get<{ user: User }>("/auth/me");
+    return data;
+  }
 }
