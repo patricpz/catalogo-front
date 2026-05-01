@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/contexts/toast-context";
 import Skeleton from "@/components/Skeleton";
 import { Package, ShoppingCart, TrendingUp, Copy, ExternalLink } from "lucide-react";
+import { useStore, useStoreProfile } from "@/hooks/useStore";
 
 const statCards = [
   { label: "Produtos ativos", value: 0, icon: Package, color: "text-green-600 bg-green-50", change: "+2 esta semana" },
@@ -14,7 +15,14 @@ const statCards = [
 export default function DashboardPage() {
   const { user, isLoading } = useAuth();
   const { info } = useToast();
-  const storeUrl = typeof window !== "undefined" ? `${window.location.origin}/catalog/minha-loja` : "";
+  const storeQuery = useStore()
+  const storeProfileQuery = useStoreProfile();
+  const store = storeQuery.data ?? user?.store ?? null;
+  const storeProfile = storeProfileQuery.data;
+  const activeAlerts = storeProfile?.alerts ?? [];
+  const storeUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/catalog/${store?.slug || "minha-loja"}`
+    : "";
 
   function handleCopyLink() {
     navigator.clipboard.writeText(storeUrl).then(() => {
@@ -58,7 +66,7 @@ export default function DashboardPage() {
             Copiar link da loja
           </button>
           <a
-            href="/catalog/minha-loja"
+            href={storeUrl}
             target="_blank"
             className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] text-white px-4 py-2 text-sm font-medium hover:bg-[var(--accent-hover)] transition-colors"
           >
@@ -101,13 +109,32 @@ export default function DashboardPage() {
               <span className="font-medium">{user?.email}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-[var(--muted)]">ID</span>
-              <span className="font-medium">{user?.id}</span>
+              <span className="text-[var(--muted)]">Slug da loja</span>
+              <span className="font-mono text-xs bg-[var(--secondary)] px-2 py-0.5 rounded">{store?.slug || "minha-loja"}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-[var(--muted)]">Slug da loja</span>
-              <span className="font-mono text-xs bg-[var(--secondary)] px-2 py-0.5 rounded">minha-loja</span>
+              <span className="text-[var(--muted)]">Plano</span>
+              <span className="font-medium">{storeProfile?.plan?.name || "-"}</span>
             </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-[var(--muted)]">Uso de produtos</span>
+              <span className="font-medium">
+                {storeProfile?.plan?.used_products ?? 0}/{storeProfile?.plan?.max_products ?? 0}
+              </span>
+            </div>
+
+            {activeAlerts.length > 0 && (
+              <div className="pt-2 border-t border-[var(--border)]">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-2">Alertas</p>
+                <div className="space-y-2">
+                  {activeAlerts.map((alert, index) => (
+                    <div key={`${alert.type}-${index}`} className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs">
+                      <strong>{alert.type}</strong>: {alert.message}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

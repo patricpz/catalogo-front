@@ -45,3 +45,14 @@ export async function updateProduct(id: string, input: UpdateProductInput): Prom
 export async function deleteProduct(id: string): Promise<void> {
   await api.delete(`/products/${id}`);
 }
+
+export async function uploadProductImage(productId: string, imageFile: File): Promise<void> {
+  const formData = new FormData();
+  formData.append("image", imageFile);
+
+  await api.post(`/products/${productId}/image`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+}
